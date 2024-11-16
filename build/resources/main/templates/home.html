@@ -11,7 +11,6 @@
         <div class="game-list">
             <!-- 게임 카드 반복 출력 -->
             <div th:each="game : ${games}" class="game-card">
-                
                 <h3 th:text="${game.name}">게임 이름</h3>
                 <p th:text="'적정 인원: ' + ${game.minPlayer} + '~' + ${game.maxPlayer}">적정 인원 정보</p>
 <!--                <a th:href="@{/games/{id}(id=${game.id})}" class="details-button">자세히 보기</a>-->
