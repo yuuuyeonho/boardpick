@@ -1,36 +1,25 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>보드게임 추천 사이트</title>
-    <link rel="stylesheet" href="/css/styles.css"> <!-- CSS 파일이 있을 경우 추가 -->
-</head>
+<head th:replace="fragments/header :: header" />
 <body>
-
+<div class="container">
 <!-- 헤더: 로그인과 회원가입 버튼 -->
-<header>
-    <nav>
-        <h1>보드게임 추천 사이트</h1>
-        <div>
-            <a th:href="@{/login}" class="button">로그인</a>
-            <a th:href="@{/register}" class="button">회원가입</a>
+<div th:replace="fragments/bodyHeader :: bodyHeader"/>
+    <!-- 메인 콘텐츠: 게임 리스트 -->
+    <main>
+        <h2>추천 보드게임 목록</h2>
+        <div class="game-list">
+            <!-- 게임 카드 반복 출력 -->
+            <div th:each="game : ${games}" class="game-card">
+                
+                <h3 th:text="${game.name}">게임 이름</h3>
+                <p th:text="'적정 인원: ' + ${game.minPlayer} + '~' + ${game.maxPlayer}">적정 인원 정보</p>
+<!--                <a th:href="@{/games/{id}(id=${game.id})}" class="details-button">자세히 보기</a>-->
+            </div>
         </div>
-    </nav>
-</header>
+    </main>
 
-<!-- 메인 콘텐츠: 게임 리스트 -->
-<main>
-    <h2>추천 보드게임 목록</h2>
-    <div class="game-list">
-        <!-- 게임 카드 반복 출력 -->
-        <div th:each="game : ${games}" class="game-card">
-            <h3 th:text="${game.name}">게임 이름</h3>
-            <p th:text="'적정 인원: ' + ${game.playerCount}">적정 인원 정보</p>
-            <p th:text="'추천 연령: ' + ${game.ageRating} + '세 이상'">추천 연령 정보</p>
-            <a th:href="@{/games/{id}(id=${game.id})}" class="details-button">자세히 보기</a>
-        </div>
-    </div>
-</main>
-
+    <div th:replcae="~{fragments/footer :: footer}"></div>
+</div>
 </body>
 </html>

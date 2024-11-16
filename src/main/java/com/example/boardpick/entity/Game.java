@@ -3,11 +3,16 @@ package com.example.boardpick.entity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-public class Game {
+@AllArgsConstructor
+@NoArgsConstructor
+public class Game{
 
     @Id
     @GeneratedValue
@@ -15,6 +20,7 @@ public class Game {
 
     private String name;
 
+    //== 필터 목록 ==//
     private int minPlayer;
     private int maxPlayer; // 인원수 필드가 범위값이라 어떻게 써야할지 고민중
 
@@ -25,4 +31,8 @@ public class Game {
     private int difficulty; //난이도
     private int ageRating; //연령등급
     */
+
+    @ManyToOne
+    private User user;
+
 }
