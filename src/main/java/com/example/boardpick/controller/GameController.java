@@ -23,7 +23,7 @@ public class GameController {
     @GetMapping("/games/new")
     public String newForm(Model model){
         model.addAttribute("form", new GameForm());
-        return "games/cre  ateGameForm";
+        return "games/createGameForm";
     }
 
     @PostMapping("/games/new")
