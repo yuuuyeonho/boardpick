@@ -1,6 +1,7 @@
 package com.example.boardpick.controller;
 
 
+import com.example.boardpick.dto.UserForm;
 import com.example.boardpick.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/signup")
+        @GetMapping("/signup")
     public String signup(Model model) {
         model.addAttribute("userForm", new UserForm());
         return "users/signupForm";
@@ -28,7 +29,6 @@ public class UserController {
     @PostMapping("/users/signup")
     public String signup(@Valid UserForm userForm, BindingResult result) {
 
-        log.info("일단 전달받았어");
         if (result.hasErrors()) {
             return "users/signupForm";
         }

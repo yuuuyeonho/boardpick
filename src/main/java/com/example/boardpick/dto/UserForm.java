@@ -1,4 +1,4 @@
-package com.example.boardpick.controller;
+package com.example.boardpick.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;

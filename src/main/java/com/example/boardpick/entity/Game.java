@@ -1,15 +1,11 @@
 package com.example.boardpick.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Getter
+@ToString
+@Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Game{
@@ -31,8 +27,4 @@ public class Game{
     private int difficulty; //난이도
     private int ageRating; //연령등급
     */
-
-    @ManyToOne
-    private User user;
-
 }
