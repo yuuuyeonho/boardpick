@@ -9,25 +9,24 @@
     <form role="form" th:action="@{/games/edit}" th:object="${gameForm}" method="post">
         <!-- id -->
         <input type="hidden" th:field="*{id}" />
-        <div class="form-group">
+        <div class="form-field">
             <label th:for="name">상품명</label>
-            <input type="text" th:field="*{name}" class="form-control"
+            <input type="text" th:field="*{name}" class="input"
                    placeholder="이름을 입력하세요" /> </div>
-        <div class="form-group">
-
+        <div class="form-field">
             <label th:for="minPlayer">최소 인원</label>
-            <input type="number" th:field="*{minPlayer}" class="form-control"
+            <input type="number" th:field="*{minPlayer}" class="input"
                    placeholder="최소 인원" /> </div>
-        <div class="form-group">
+        <div class="form-field">
             <label th:for="maxPlayer">최대 인원</label>
-            <input type="number" th:field="*{maxPlayer}" class="form-control"
+            <input type="number" th:field="*{maxPlayer}" class="input"
                    placeholder="최대 인원" /> </div>
-        <div class="form-group">
+        <div class="form-field">
             <label th:for="author">카테고리</label>
-            <input type="text" th:field="*{category}" class="form-control"
+            <input type="text" th:field="*{category}" class="input"
                    placeholder="카테고리" /> </div>
         <br/>
-        <button type="submit" class="btn btn-primary">수정</button>
+        <button type="submit" class="btn btn--primary">수정</button>
     </form>
     <div th:replcae="~{fragments/footer :: footer}"></div>
 </div>

@@ -1,24 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
- <div class="header" th:fragment="bodyHeader">
-     <header>
-         <nav>
-             <ul>
-                 <li><a href="/boardpick"><h1>boardPICK</h1></a></li>
-<!--                 <li th:if="${#authentication.principal.username}">-->
-<!--                     &lt;!&ndash; 로그인된 상태: 사용자 이름 표시 &ndash;&gt;-->
-<!--                     <span>Welcome, <strong th:text="${#authentication.principal.username}">Username</strong></span>-->
-<!--                     <a th:href="@{/users/logout}">Logout</a>-->
-<!--                 </li>-->
-<!--                 <li th:unless="${#authentication.principal.username}">-->
-<!--                     &lt;!&ndash; 로그인되지 않은 상태 &ndash;&gt;-->
-<!--                     <a th:href="@{signup}" class="btn">회원가입</a>-->
-<!--                     <a th:href="@{/users/login}">Login</a>-->
-<!--                 </li>-->
-                 <li><a sec:authorize="isAnonymous()" th:href="@{/signup}" class="btn">회원가입</a></li>
-                 <li><a sec:authorize="isAnonymous()" th:href="@{/users/login}" class="btn">로그인</a></li>
-                 <li><a sec:authorize="isAuthenticated()" th:href="@{/users/logout}" class="btn">로그아웃</a></li>
-             </ul>
-         </nav>
-     </header>
+<div class="header" th:fragment="bodyHeader">
+    <header>
+        <nav>
+            <ul class="nav-left">
+                <li><a href="/boardpick"><h1>boardPICK</h1></a></li>
+            </ul>
+            <ul class="nav-right">
+                <li><a sec:authorize="isAnonymous()" th:href="@{/signup}">회원가입</a></li>
+                <li><a sec:authorize="isAnonymous()" th:href="@{/users/login}">로그인</a></li>
+                <li><a sec:authorize="isAuthenticated()" th:href="@{/users/logout}">로그아웃</a></li>
+            </ul>
+        </nav>
+    </header>
 </div>

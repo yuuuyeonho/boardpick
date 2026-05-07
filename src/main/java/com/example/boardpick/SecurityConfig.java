@@ -21,6 +21,8 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/**")).permitAll())
                 .headers((headers) -> headers.addHeaderWriter(
                         new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
+                .csrf((csrf) -> csrf
+                        .ignoringRequestMatchers(new AntPathRequestMatcher("/api/**")))
                 .formLogin((formLogin) -> formLogin
                         .loginPage("/users/login")
                         .defaultSuccessUrl("/boardpick"))

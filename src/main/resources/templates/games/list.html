@@ -7,8 +7,6 @@
   <div th:replace="fragments/bodyHeader :: bodyHeader"/>
   <!-- 메인 콘텐츠: 게임 리스트 -->
   <main>
-
-    <a href = "/games/new" class="btn=primary">게임 추가</a>
     <div class="game-list">
       <!-- 게임 카드 반복 출력 -->
 <!--      <div th:each="game : ${games}" class="game-card">-->
@@ -17,7 +15,7 @@
 <!--        &lt;!&ndash;                <a th:href="@{/games/{id}(id=${game.id})}" class="details-button">자세히 보기</a>&ndash;&gt;-->
 <!--      </div>-->
 <!--    </div>-->
-      <table class="table table-striped">
+      <table class="game-table">
         <thead>
         <tr>
           <th>
@@ -59,7 +57,7 @@
         </tr>
         </tbody>
       </table>
-
+      <a href = "/games/new" class="btn btn--primary">게임 추가</a>
   </main>
   <div th:replcae="~{fragments/footer :: footer}"></div>
 </div>
