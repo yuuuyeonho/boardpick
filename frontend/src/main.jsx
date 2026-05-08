@@ -1,59 +1,93 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
+  Building2,
+  Clock3,
   Dices,
   Edit3,
   Gamepad2,
   Plus,
-  RefreshCw,
   Save,
   Search,
+  SlidersHorizontal,
   Trash2,
   Users,
   X
 } from 'lucide-react';
-import { createGame, deleteGame, getGames, pickGame, updateGame } from './api/games';
+import {
+  addMyCollectionGame,
+  createGame,
+  deleteGame,
+  getCollectionGames,
+  getCollections,
+  getGames,
+  pickCollectionGame,
+  pickGame,
+  removeMyCollectionGame,
+  updateGame
+} from './api/games';
 import './styles.css';
 
 const emptyForm = {
   name: '',
   minPlayer: 2,
   maxPlayer: 4,
-  category: ''
+  category: '',
+  playTimeMinutes: 30,
+  difficulty: 2,
+  description: ''
+};
+
+const emptyFilters = {
+  players: '',
+  category: '',
+  maxPlayTime: '',
+  keyword: ''
 };
 
 function App() {
+  const [collections, setCollections] = useState([]);
+  const [selectedCollection, setSelectedCollection] = useState('');
   const [games, setGames] = useState([]);
+  const [pickedGame, setPickedGame] = useState(null);
+  const [filters, setFilters] = useState(emptyFilters);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
-  const [pickedGame, setPickedGame] = useState(null);
-  const [query, setQuery] = useState('');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    loadCollections();
     loadGames();
   }, []);
 
-  const filteredGames = useMemo(() => {
-    const keyword = query.trim().toLowerCase();
-    if (!keyword) {
-      return games;
-    }
+  useEffect(() => {
+    loadGames();
+  }, [selectedCollection]);
 
-    return games.filter((game) =>
-      [game.name, game.category].some((value) => value?.toLowerCase().includes(keyword))
-    );
-  }, [games, query]);
+  const collection = useMemo(() => {
+    return collections.find((item) => item.slug === selectedCollection);
+  }, [collections, selectedCollection]);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(games.map((game) => game.category).filter(Boolean))).slice(0, 6);
+    return Array.from(new Set(games.map((game) => game.category).filter(Boolean))).sort();
   }, [games]);
 
-  async function loadGames() {
+  async function loadCollections() {
+    try {
+      const data = await getCollections();
+      setCollections(data);
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message });
+    }
+  }
+
+  async function loadGames(nextFilters = filters) {
     try {
       setLoading(true);
-      const data = await getGames();
+      const data = selectedCollection
+        ? await getCollectionGames(selectedCollection, nextFilters)
+        : await getGames(nextFilters);
       setGames(data);
       setStatus({ type: 'idle', message: '' });
     } catch (error) {
@@ -63,12 +97,48 @@ function App() {
     }
   }
 
-  function handleChange(event) {
+  function handleFilterChange(event) {
+    const { name, value } = event.target;
+    setFilters((current) => ({
+      ...current,
+      [name]: value
+    }));
+  }
+
+  function handleFormChange(event) {
     const { name, value } = event.target;
     setForm((current) => ({
       ...current,
-      [name]: name.includes('Player') ? Number(value) : value
+      [name]:
+        name.includes('Player') || name === 'playTimeMinutes' || name === 'difficulty'
+          ? Number(value)
+          : value
     }));
+  }
+
+  async function handleSearch(event) {
+    event.preventDefault();
+    setPickedGame(null);
+    await loadGames(filters);
+  }
+
+  async function handlePick() {
+    try {
+      const game = selectedCollection
+        ? await pickCollectionGame(selectedCollection, filters)
+        : await pickGame(filters);
+      setPickedGame(game);
+      setStatus({ type: 'success', message: '조건에 맞는 게임을 골랐습니다.' });
+    } catch (error) {
+      setPickedGame(null);
+      setStatus({ type: 'error', message: error.message });
+    }
+  }
+
+  function resetFilters() {
+    setFilters(emptyFilters);
+    setPickedGame(null);
+    loadGames(emptyFilters);
   }
 
   function startEdit(game) {
@@ -77,9 +147,11 @@ function App() {
       name: game.name,
       minPlayer: game.minPlayer,
       maxPlayer: game.maxPlayer,
-      category: game.category
+      category: game.category,
+      playTimeMinutes: game.playTimeMinutes || 30,
+      difficulty: game.difficulty || 2,
+      description: game.description || ''
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function resetForm() {
@@ -108,41 +180,50 @@ function App() {
         }
         return [saved, ...current];
       });
+      resetForm();
       setStatus({
         type: 'success',
-        message: editingId ? '게임 정보를 수정했습니다.' : '새 게임을 추가했습니다.'
+        message: editingId ? 'DB 게임 정보를 수정했습니다.' : 'DB에 게임을 추가했습니다.'
       });
-      resetForm();
     } catch (error) {
-      setStatus({ type: 'error', message: error.message });
+      setStatus({ type: 'error', message: `${error.message} 관리자 계정으로 로그인해야 합니다.` });
     }
   }
 
-  async function handleDelete(game) {
-    const confirmed = window.confirm(`${game.name}을(를) 삭제할까요?`);
-    if (!confirmed) {
+  async function handleDeleteFromCatalog(game) {
+    if (!window.confirm(`${game.name}을(를) DB에서 삭제할까요?`)) {
       return;
     }
 
     try {
       await deleteGame(game.id);
       setGames((current) => current.filter((item) => item.id !== game.id));
-      if (pickedGame?.id === game.id) {
-        setPickedGame(null);
-      }
-      setStatus({ type: 'success', message: '게임을 삭제했습니다.' });
+      setStatus({ type: 'success', message: 'DB에서 게임을 삭제했습니다.' });
     } catch (error) {
-      setStatus({ type: 'error', message: error.message });
+      setStatus({ type: 'error', message: `${error.message} 관리자 계정으로 로그인해야 합니다.` });
     }
   }
 
-  async function handlePick() {
+  async function handleAddToCollection(game) {
     try {
-      const game = await pickGame();
-      setPickedGame(game);
-      setStatus({ type: 'success', message: '오늘의 추천 게임을 골랐습니다.' });
+      await addMyCollectionGame(game.id);
+      setStatus({ type: 'success', message: '내 게임 목록에 추가했습니다.' });
     } catch (error) {
-      setStatus({ type: 'error', message: error.message });
+      setStatus({ type: 'error', message: `${error.message} 로그인해야 합니다.` });
+    }
+  }
+
+  async function handleRemoveFromCollection(game) {
+    if (!window.confirm(`${game.name}을(를) 내 게임 목록에서 제거할까요?`)) {
+      return;
+    }
+
+    try {
+      await removeMyCollectionGame(game.id);
+      setGames((current) => current.filter((item) => item.id !== game.id));
+      setStatus({ type: 'success', message: '내 게임 목록에서 제거했습니다.' });
+    } catch (error) {
+      setStatus({ type: 'error', message: `${error.message} 로그인해야 합니다.` });
     }
   }
 
@@ -163,38 +244,34 @@ function App() {
         <div className="hero-grid">
           <div className="hero-copy">
             <p className="eyebrow">Board Game Picker</p>
-            <h1>모임에 맞는 보드게임을 빠르게 고르세요.</h1>
+            <h1>선택이 어려울 때, 조건에 맞는 한 판을 골라드립니다.</h1>
             <p>
-              인원수와 카테고리를 한눈에 비교하고, 결정이 필요할 때는 랜덤 추천으로 바로
-              선택할 수 있습니다.
+              게임 목록을 고르기 전에는 전체 보드게임 DB에서 찾고, 개인이나 카페의 보유 목록을
+              고르면 그 안에서 조건에 맞는 게임을 추천받을 수 있습니다.
             </p>
-            <div className="hero-actions">
-              <button className="primary-button" type="button" onClick={handlePick}>
-                <Dices size={18} />
-                게임 추천
-              </button>
-              <button className="ghost-button" type="button" onClick={loadGames}>
-                <RefreshCw size={18} />
-                새로고침
-              </button>
-            </div>
           </div>
 
           <aside className="pick-panel" aria-label="추천 게임">
-            <div className="panel-label">오늘의 추천</div>
+            <div className="panel-label">추천 결과</div>
             {pickedGame ? (
               <>
                 <h2>{pickedGame.name}</h2>
-                <p>{pickedGame.category}</p>
-                <div className="player-chip">
-                  <Users size={16} />
-                  {pickedGame.minPlayer}~{pickedGame.maxPlayer}명
+                <p>{pickedGame.description || pickedGame.category}</p>
+                <div className="chip-row">
+                  <span className="player-chip">
+                    <Users size={16} />
+                    {pickedGame.minPlayer}~{pickedGame.maxPlayer}명
+                  </span>
+                  <span className="player-chip">
+                    <Clock3 size={16} />
+                    {pickedGame.playTimeMinutes || '-'}분
+                  </span>
                 </div>
               </>
             ) : (
               <>
-                <h2>아직 추천 전입니다</h2>
-                <p>버튼을 누르면 등록된 게임 중 하나를 골라드립니다.</p>
+                <h2>{collection ? collection.name : '전체 보드게임'}</h2>
+                <p>조건을 입력한 뒤 추천 버튼을 누르면 한 게임을 골라드립니다.</p>
               </>
             )}
           </aside>
@@ -202,22 +279,191 @@ function App() {
       </section>
 
       <section className="workspace">
-        <form className="editor" onSubmit={handleSubmit}>
+        <aside className="editor filter-panel">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Game Editor</p>
-              <h2>{editingId ? '게임 수정' : '게임 추가'}</h2>
+              <p className="eyebrow">Find & Pick</p>
+              <h2>추천 조건</h2>
             </div>
-            {editingId && (
+            <SlidersHorizontal size={22} />
+          </div>
+
+          <label>
+            게임 목록
+            <select
+              value={selectedCollection}
+              onChange={(event) => setSelectedCollection(event.target.value)}
+            >
+              <option value="">전체 보드게임</option>
+              {collections.map((item) => (
+                <option key={item.id} value={item.slug}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <form onSubmit={handleSearch}>
+            <label>
+              검색어
+              <input
+                name="keyword"
+                value={filters.keyword}
+                onChange={handleFilterChange}
+                placeholder="게임 이름 또는 카테고리"
+              />
+            </label>
+
+            <div className="field-row">
+              <label>
+                인원수
+                <input
+                  name="players"
+                  type="number"
+                  min="1"
+                  value={filters.players}
+                  onChange={handleFilterChange}
+                  placeholder="4"
+                />
+              </label>
+              <label>
+                최대 시간
+                <input
+                  name="maxPlayTime"
+                  type="number"
+                  min="1"
+                  value={filters.maxPlayTime}
+                  onChange={handleFilterChange}
+                  placeholder="60"
+                />
+              </label>
+            </div>
+
+            <label>
+              카테고리
+              <select name="category" value={filters.category} onChange={handleFilterChange}>
+                <option value="">전체</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="button-row">
+              <button className="primary-button" type="button" onClick={handlePick}>
+                <Dices size={18} />
+                하나 추천
+              </button>
+              <button className="ghost-button muted" type="submit">
+                <Search size={18} />
+                목록 검색
+              </button>
+            </div>
+            <button className="text-button" type="button" onClick={resetFilters}>
+              조건 초기화
+            </button>
+          </form>
+
+          {status.message && <p className={`status ${status.type}`}>{status.message}</p>}
+        </aside>
+
+        <section className="library">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Game Library</p>
+              <h2>{collection ? `${collection.name} 보유 게임` : '전체 보드게임'}</h2>
+            </div>
+            <span className="count-badge">{games.length}개</span>
+          </div>
+
+          <div className="game-grid">
+            {loading ? (
+              <div className="empty-state">게임 목록을 불러오는 중입니다.</div>
+            ) : games.length === 0 ? (
+              <div className="empty-state">조건에 맞는 게임이 없습니다.</div>
+            ) : (
+              games.map((game) => (
+                <article className="game-card" key={game.id}>
+                  <div>
+                    <p>{game.category}</p>
+                    <h3>{game.name}</h3>
+                    {game.description && <span className="description">{game.description}</span>}
+                  </div>
+                  <div className="meta-grid">
+                    <span>
+                      <Users size={15} />
+                      {game.minPlayer}~{game.maxPlayer}명
+                    </span>
+                    <span>
+                      <Clock3 size={15} />
+                      {game.playTimeMinutes || '-'}분
+                    </span>
+                    <span>난이도 {game.difficulty || '-'}</span>
+                  </div>
+                  <div className="card-actions">
+                    {!selectedCollection && (
+                      <button
+                        className="icon-button"
+                        type="button"
+                        onClick={() => handleAddToCollection(game)}
+                        aria-label={`${game.name} 내 목록에 추가`}
+                      >
+                        <Building2 size={17} />
+                      </button>
+                    )}
+                    {selectedCollection && (
+                      <button
+                        className="icon-button danger"
+                        type="button"
+                        onClick={() => handleRemoveFromCollection(game)}
+                        aria-label={`${game.name} 내 목록에서 제거`}
+                      >
+                        <X size={17} />
+                      </button>
+                    )}
+                    <button
+                      className="icon-button"
+                      type="button"
+                      onClick={() => startEdit(game)}
+                      aria-label={`${game.name} 수정`}
+                    >
+                      <Edit3 size={17} />
+                    </button>
+                    <button
+                      className="icon-button danger"
+                      type="button"
+                      onClick={() => handleDeleteFromCatalog(game)}
+                      aria-label={`${game.name} 삭제`}
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+
+        <form className="editor manage-panel" onSubmit={handleSubmit}>
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Admin</p>
+              <h2>{editingId ? 'DB 게임 수정' : 'DB 게임 등록'}</h2>
+            </div>
+            {editingId ? (
               <button className="icon-button" type="button" onClick={resetForm} aria-label="수정 취소">
                 <X size={18} />
               </button>
+            ) : (
+              <Plus size={22} />
             )}
           </div>
 
           <label>
             게임 이름
-            <input name="name" value={form.name} onChange={handleChange} placeholder="스플렌더" />
+            <input name="name" value={form.name} onChange={handleFormChange} placeholder="스플렌더" />
           </label>
 
           <div className="field-row">
@@ -228,7 +474,7 @@ function App() {
                 type="number"
                 min="1"
                 value={form.minPlayer}
-                onChange={handleChange}
+                onChange={handleFormChange}
               />
             </label>
             <label>
@@ -238,95 +484,55 @@ function App() {
                 type="number"
                 min="1"
                 value={form.maxPlayer}
-                onChange={handleChange}
+                onChange={handleFormChange}
+              />
+            </label>
+          </div>
+
+          <div className="field-row">
+            <label>
+              플레이 시간
+              <input
+                name="playTimeMinutes"
+                type="number"
+                min="1"
+                value={form.playTimeMinutes}
+                onChange={handleFormChange}
+              />
+            </label>
+            <label>
+              난이도
+              <input
+                name="difficulty"
+                type="number"
+                min="1"
+                max="5"
+                value={form.difficulty}
+                onChange={handleFormChange}
               />
             </label>
           </div>
 
           <label>
             카테고리
-            <input name="category" value={form.category} onChange={handleChange} placeholder="전략" />
+            <input name="category" value={form.category} onChange={handleFormChange} placeholder="전략" />
           </label>
 
-          {status.message && <p className={`status ${status.type}`}>{status.message}</p>}
+          <label>
+            설명
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleFormChange}
+              placeholder="짧은 추천 포인트"
+            />
+          </label>
 
           <button className="primary-button full" type="submit">
             <Save size={18} />
-            {editingId ? '수정 저장' : '게임 추가'}
+            {editingId ? '수정 저장' : '게임 등록'}
           </button>
         </form>
-
-        <section className="library">
-          <div className="library-header">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Library</p>
-                <h2>게임 목록</h2>
-              </div>
-              <span className="count-badge">{games.length}개</span>
-            </div>
-
-            <label className="search-box">
-              <Search size={18} />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="이름 또는 카테고리 검색"
-              />
-            </label>
-
-            {categories.length > 0 && (
-              <div className="category-strip">
-                {categories.map((category) => (
-                  <button type="button" key={category} onClick={() => setQuery(category)}>
-                    {category}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="game-grid">
-            {loading ? (
-              <div className="empty-state">게임 목록을 불러오는 중입니다.</div>
-            ) : filteredGames.length === 0 ? (
-              <div className="empty-state">표시할 게임이 없습니다.</div>
-            ) : (
-              filteredGames.map((game) => (
-                <article className="game-card" key={game.id}>
-                  <div>
-                    <p>{game.category}</p>
-                    <h3>{game.name}</h3>
-                  </div>
-                  <div className="card-footer">
-                    <span>
-                      <Users size={15} />
-                      {game.minPlayer}~{game.maxPlayer}명
-                    </span>
-                    <div className="card-actions">
-                      <button
-                        className="icon-button"
-                        type="button"
-                        onClick={() => startEdit(game)}
-                        aria-label={`${game.name} 수정`}
-                      >
-                        <Edit3 size={17} />
-                      </button>
-                      <button
-                        className="icon-button danger"
-                        type="button"
-                        onClick={() => handleDelete(game)}
-                        aria-label={`${game.name} 삭제`}
-                      >
-                        <Trash2 size={17} />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        </section>
       </section>
     </main>
   );

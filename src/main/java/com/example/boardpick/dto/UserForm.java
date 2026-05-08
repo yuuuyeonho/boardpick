@@ -12,6 +12,8 @@ public class UserForm {
     @NotEmpty(message = "회원 이름은 필수입니다.")
     private String username;
 
+    private String displayName;
+
     @NotEmpty(message = "비밀번호는 필수입니다.")
     private String password1;
 

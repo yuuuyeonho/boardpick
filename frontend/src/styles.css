@@ -21,7 +21,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -234,7 +236,7 @@ a {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) minmax(280px, 340px);
   gap: 24px;
   max-width: 1180px;
   margin: -26px auto 0;
@@ -252,6 +254,18 @@ a {
   position: sticky;
   top: 20px;
   padding: 22px;
+}
+
+.filter-panel {
+  grid-column: 1;
+}
+
+.library {
+  grid-column: 2;
+}
+
+.manage-panel {
+  grid-column: 3;
 }
 
 .section-heading {
@@ -281,9 +295,10 @@ a {
   flex: 1;
 }
 
-input {
+input,
+select,
+textarea {
   width: 100%;
-  min-height: 44px;
   border: 1px solid #d4dce2;
   border-radius: 8px;
   padding: 0 12px;
@@ -292,7 +307,20 @@ input {
   outline: none;
 }
 
-input:focus {
+input,
+select {
+  min-height: 44px;
+}
+
+textarea {
+  min-height: 92px;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
   border-color: #d95d48;
   box-shadow: 0 0 0 4px rgba(217, 93, 72, 0.12);
 }
@@ -405,6 +433,65 @@ input:focus {
   font-weight: 800;
 }
 
+.button-row,
+.chip-row {
+  display: flex;
+  gap: 10px;
+}
+
+.button-row {
+  align-items: stretch;
+  margin-top: 6px;
+}
+
+.button-row .primary-button,
+.button-row .ghost-button {
+  flex: 1;
+}
+
+.muted {
+  background: #e8efec;
+}
+
+.text-button {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  margin-top: 8px;
+  color: #65717b;
+  background: transparent;
+  font-weight: 800;
+}
+
+.description {
+  display: block;
+  margin-top: 10px;
+  color: #65717b;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+  color: #65717b;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.meta-grid span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.game-card .card-actions {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
 .icon-button {
   display: inline-grid;
   place-items: center;
@@ -438,6 +525,12 @@ input:focus {
   .hero-grid,
   .workspace {
     grid-template-columns: 1fr;
+  }
+
+  .filter-panel,
+  .library,
+  .manage-panel {
+    grid-column: auto;
   }
 
   .topbar {

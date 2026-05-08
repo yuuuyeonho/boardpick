@@ -1,5 +1,17 @@
 const API_BASE = '/api/games';
 
+function toQuery(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, value);
+    }
+  });
+
+  const value = query.toString();
+  return value ? `?${value}` : '';
+}
+
 async function request(path = '', options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
@@ -21,8 +33,20 @@ async function request(path = '', options = {}) {
   return response.json();
 }
 
-export function getGames() {
-  return request();
+export function getGames(filters = {}) {
+  return request(`${toQuery(filters)}`);
+}
+
+export function getCollections() {
+  return request('/collections');
+}
+
+export function getCollection(slug) {
+  return request(`/collections/${slug}`);
+}
+
+export function getCollectionGames(slug, filters = {}) {
+  return request(`/collections/${slug}/games${toQuery(filters)}`);
 }
 
 export function createGame(game) {
@@ -45,6 +69,22 @@ export function deleteGame(id) {
   });
 }
 
-export function pickGame() {
-  return request('/pick');
+export function pickGame(filters = {}) {
+  return request(`/pick${toQuery(filters)}`);
+}
+
+export function pickCollectionGame(slug, filters = {}) {
+  return request(`/collections/${slug}/pick${toQuery(filters)}`);
+}
+
+export function addMyCollectionGame(gameId) {
+  return request(`/collections/me/games/${gameId}`, {
+    method: 'POST'
+  });
+}
+
+export function removeMyCollectionGame(gameId) {
+  return request(`/collections/me/games/${gameId}`, {
+    method: 'DELETE'
+  });
 }

@@ -17,12 +17,21 @@ public class GameForm {
 
     private String category;
 
+    private int playTimeMinutes;
+
+    private int difficulty;
+
+    private String description;
+
     public Game toEntity(){
         Game game = new Game();
         game.setName(name);
         game.setMinPlayer(minPlayer);
         game.setMaxPlayer(maxPlayer);
         game.setCategory(category);
+        game.setPlayTimeMinutes(playTimeMinutes);
+        game.setDifficulty(difficulty);
+        game.setDescription(description);
 
         return game;
     }
@@ -34,6 +43,9 @@ public class GameForm {
         game.setMinPlayer(minPlayer);
         game.setMaxPlayer(maxPlayer);
         game.setCategory(category);
+        game.setPlayTimeMinutes(playTimeMinutes);
+        game.setDifficulty(difficulty);
+        game.setDescription(description);
 
         return game;
     }

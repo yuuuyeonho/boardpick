@@ -22,9 +22,13 @@ public class Game{
 
     private String category;
 
+    private int playTimeMinutes;
+
+    private int difficulty;
+
+    private String description;
+
     /* 나중에 추가하면 좋을 필터
-    private int playTime; //플레이타임
-    private int difficulty; //난이도
     private int ageRating; //연령등급
     */
 }
