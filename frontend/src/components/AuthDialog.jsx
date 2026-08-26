@@ -98,7 +98,7 @@ export default function AuthDialog({ mode, pending, error, onClose, onSubmit, on
         </button>
 
         <div className="auth-divider"><span>또는</span></div>
-        <a className="google-login" href="/oauth2/authorization/google">
+        <a className="google-login" href="/api/oauth2/google">
           <span className="google-mark" aria-hidden="true">G</span>
           Google로 계속하기
         </a>
