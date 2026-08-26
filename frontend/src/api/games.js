@@ -1,4 +1,7 @@
+import { apiRequest } from './client';
+
 const API_BASE = '/api/games';
+const LIST_API_BASE = '/api/lists';
 
 function toQuery(params = {}) {
   const query = new URLSearchParams();
@@ -12,41 +15,23 @@ function toQuery(params = {}) {
   return value ? `?${value}` : '';
 }
 
-async function request(path = '', options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    },
-    ...options
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `요청에 실패했습니다. (${response.status})`);
-  }
-
-  if (response.status === 204) {
-    return null;
-  }
-
-  return response.json();
-}
+const request = (path = '', options = {}) => apiRequest(`${API_BASE}${path}`, options);
+const listRequest = (path = '', options = {}) => apiRequest(`${LIST_API_BASE}${path}`, options);
 
 export function getGames(filters = {}) {
   return request(`${toQuery(filters)}`);
 }
 
-export function getCollections() {
-  return request('/collections');
+export function getLists() {
+  return listRequest('');
 }
 
-export function getCollection(slug) {
-  return request(`/collections/${slug}`);
+export function getList(listId) {
+  return listRequest(`/${listId}`);
 }
 
-export function getCollectionGames(slug, filters = {}) {
-  return request(`/collections/${slug}/games${toQuery(filters)}`);
+export function getListGames(listId, filters = {}) {
+  return listRequest(`/${listId}/games${toQuery(filters)}`);
 }
 
 export function createGame(game) {
@@ -73,18 +58,18 @@ export function pickGame(filters = {}) {
   return request(`/pick${toQuery(filters)}`);
 }
 
-export function pickCollectionGame(slug, filters = {}) {
-  return request(`/collections/${slug}/pick${toQuery(filters)}`);
+export function pickListGame(listId, filters = {}) {
+  return listRequest(`/${listId}/pick${toQuery(filters)}`);
 }
 
-export function addMyCollectionGame(gameId) {
-  return request(`/collections/me/games/${gameId}`, {
+export function addMyListGame(gameId) {
+  return listRequest(`/me/games/${gameId}`, {
     method: 'POST'
   });
 }
 
-export function removeMyCollectionGame(gameId) {
-  return request(`/collections/me/games/${gameId}`, {
+export function removeMyListGame(gameId) {
+  return listRequest(`/me/games/${gameId}`, {
     method: 'DELETE'
   });
 }

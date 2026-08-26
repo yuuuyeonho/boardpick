@@ -15,17 +15,19 @@ import {
   X
 } from 'lucide-react';
 import {
-  addMyCollectionGame,
+  addMyListGame,
   createGame,
   deleteGame,
-  getCollectionGames,
-  getCollections,
+  getListGames,
+  getLists,
   getGames,
-  pickCollectionGame,
+  pickListGame,
   pickGame,
-  removeMyCollectionGame,
+  removeMyListGame,
   updateGame
 } from './api/games';
+import { getMe, login, logout, signup } from './api/members';
+import AuthDialog from './components/AuthDialog';
 import './styles.css';
 
 const emptyForm = {
@@ -34,8 +36,7 @@ const emptyForm = {
   maxPlayer: 4,
   category: '',
   playTimeMinutes: 30,
-  difficulty: 2,
-  description: ''
+  difficulty: 2
 };
 
 const emptyFilters = {
@@ -46,8 +47,8 @@ const emptyFilters = {
 };
 
 function App() {
-  const [collections, setCollections] = useState([]);
-  const [selectedCollection, setSelectedCollection] = useState('');
+  const [lists, setLists] = useState([]);
+  const [selectedList, setSelectedList] = useState('');
   const [games, setGames] = useState([]);
   const [pickedGame, setPickedGame] = useState(null);
   const [filters, setFilters] = useState(emptyFilters);
@@ -55,28 +56,44 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [loading, setLoading] = useState(true);
+  const [member, setMember] = useState(null);
+  const [authMode, setAuthMode] = useState(null);
+  const [authPending, setAuthPending] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
-    loadCollections();
+    loadLists();
     loadGames();
+    getMe().then(setMember).catch(() => setMember(null));
   }, []);
 
   useEffect(() => {
     loadGames();
-  }, [selectedCollection]);
+  }, [selectedList]);
 
-  const collection = useMemo(() => {
-    return collections.find((item) => item.slug === selectedCollection);
-  }, [collections, selectedCollection]);
+  const list = useMemo(() => {
+    return lists.find((item) => String(item.id) === selectedList);
+  }, [lists, selectedList]);
+
+  const visibleLists = useMemo(() => {
+    return lists.filter((item) => item.isPublic || item.memberId === member?.id);
+  }, [lists, member]);
+
+  const ownList = useMemo(() => {
+    return lists.find((item) => item.memberId === member?.id);
+  }, [lists, member]);
+
+  const isAdmin = member?.loginId === 'admin';
+  const isOwnListSelected = Boolean(list && list.memberId === member?.id);
 
   const categories = useMemo(() => {
     return Array.from(new Set(games.map((game) => game.category).filter(Boolean))).sort();
   }, [games]);
 
-  async function loadCollections() {
+  async function loadLists() {
     try {
-      const data = await getCollections();
-      setCollections(data);
+      const data = await getLists();
+      setLists(data);
     } catch (error) {
       setStatus({ type: 'error', message: error.message });
     }
@@ -85,8 +102,8 @@ function App() {
   async function loadGames(nextFilters = filters) {
     try {
       setLoading(true);
-      const data = selectedCollection
-        ? await getCollectionGames(selectedCollection, nextFilters)
+      const data = selectedList
+        ? await getListGames(selectedList, nextFilters)
         : await getGames(nextFilters);
       setGames(data);
       setStatus({ type: 'idle', message: '' });
@@ -124,8 +141,8 @@ function App() {
 
   async function handlePick() {
     try {
-      const game = selectedCollection
-        ? await pickCollectionGame(selectedCollection, filters)
+      const game = selectedList
+        ? await pickListGame(selectedList, filters)
         : await pickGame(filters);
       setPickedGame(game);
       setStatus({ type: 'success', message: '조건에 맞는 게임을 골랐습니다.' });
@@ -149,8 +166,7 @@ function App() {
       maxPlayer: game.maxPlayer,
       category: game.category,
       playTimeMinutes: game.playTimeMinutes || 30,
-      difficulty: game.difficulty || 2,
-      description: game.description || ''
+      difficulty: game.difficulty || 2
     });
   }
 
@@ -204,26 +220,77 @@ function App() {
     }
   }
 
-  async function handleAddToCollection(game) {
+  async function handleAddToList(game) {
+    if (!member) {
+      openAuth('login');
+      return;
+    }
     try {
-      await addMyCollectionGame(game.id);
-      setStatus({ type: 'success', message: '내 게임 목록에 추가했습니다.' });
+      await addMyListGame(game.id);
+      setStatus({ type: 'success', message: `${ownList?.name || '내 게임 리스트'}에 추가했습니다.` });
     } catch (error) {
       setStatus({ type: 'error', message: `${error.message} 로그인해야 합니다.` });
     }
   }
 
-  async function handleRemoveFromCollection(game) {
+  async function handleRemoveFromList(game) {
+    if (!isOwnListSelected) {
+      setStatus({ type: 'error', message: '본인의 게임 리스트만 수정할 수 있습니다.' });
+      return;
+    }
     if (!window.confirm(`${game.name}을(를) 내 게임 목록에서 제거할까요?`)) {
       return;
     }
 
     try {
-      await removeMyCollectionGame(game.id);
+      await removeMyListGame(game.id);
       setGames((current) => current.filter((item) => item.id !== game.id));
       setStatus({ type: 'success', message: '내 게임 목록에서 제거했습니다.' });
     } catch (error) {
       setStatus({ type: 'error', message: `${error.message} 로그인해야 합니다.` });
+    }
+  }
+
+  function openAuth(mode) {
+    setAuthError('');
+    setAuthMode(mode);
+  }
+
+  async function handleAuthSubmit(credentials) {
+    setAuthPending(true);
+    setAuthError('');
+    try {
+      if (authMode === 'signup') {
+        await signup(credentials);
+      }
+      const signedInMember = await login({
+        loginId: credentials.loginId,
+        password: credentials.password
+      });
+      setMember(signedInMember);
+      await loadLists();
+      setAuthMode(null);
+      setStatus({
+        type: 'success',
+        message: authMode === 'signup' ? '회원가입하고 로그인했습니다.' : '로그인했습니다.'
+      });
+    } catch (error) {
+      setAuthError(error.message);
+    } finally {
+      setAuthPending(false);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await logout();
+      setMember(null);
+      if (list && !list.isPublic) {
+        setSelectedList('');
+      }
+      setStatus({ type: 'success', message: '로그아웃했습니다.' });
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message });
     }
   }
 
@@ -236,8 +303,17 @@ function App() {
             <span>Boardpick</span>
           </a>
           <div className="nav-actions">
-            <a href="http://localhost:8080/users/login">로그인</a>
-            <a href="http://localhost:8080/signup">회원가입</a>
+            {member ? (
+              <>
+                <span>{member.nickname}</span>
+                <button type="button" onClick={handleLogout}>로그아웃</button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => openAuth('login')}>로그인</button>
+                <button type="button" onClick={() => openAuth('signup')}>회원가입</button>
+              </>
+            )}
           </div>
         </nav>
 
@@ -256,7 +332,7 @@ function App() {
             {pickedGame ? (
               <>
                 <h2>{pickedGame.name}</h2>
-                <p>{pickedGame.description || pickedGame.category}</p>
+                <p>{pickedGame.category}</p>
                 <div className="chip-row">
                   <span className="player-chip">
                     <Users size={16} />
@@ -270,7 +346,7 @@ function App() {
               </>
             ) : (
               <>
-                <h2>{collection ? collection.name : '전체 보드게임'}</h2>
+                <h2>{list ? list.name : '전체 보드게임'}</h2>
                 <p>조건을 입력한 뒤 추천 버튼을 누르면 한 게임을 골라드립니다.</p>
               </>
             )}
@@ -278,7 +354,7 @@ function App() {
         </div>
       </section>
 
-      <section className="workspace">
+      <section className={`workspace ${isAdmin ? '' : 'without-admin'}`}>
         <aside className="editor filter-panel">
           <div className="section-heading">
             <div>
@@ -291,13 +367,13 @@ function App() {
           <label>
             게임 목록
             <select
-              value={selectedCollection}
-              onChange={(event) => setSelectedCollection(event.target.value)}
+              value={selectedList}
+              onChange={(event) => setSelectedList(event.target.value)}
             >
               <option value="">전체 보드게임</option>
-              {collections.map((item) => (
-                <option key={item.id} value={item.slug}>
-                  {item.name}
+              {visibleLists.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}{item.memberId === member?.id ? ' · 내 리스트' : ''}
                 </option>
               ))}
             </select>
@@ -373,7 +449,7 @@ function App() {
           <div className="section-heading">
             <div>
               <p className="eyebrow">Game Library</p>
-              <h2>{collection ? `${collection.name} 보유 게임` : '전체 보드게임'}</h2>
+              <h2>{list ? `${list.name} 보유 게임` : '전체 보드게임'}</h2>
             </div>
             <span className="count-badge">{games.length}개</span>
           </div>
@@ -389,7 +465,6 @@ function App() {
                   <div>
                     <p>{game.category}</p>
                     <h3>{game.name}</h3>
-                    {game.description && <span className="description">{game.description}</span>}
                   </div>
                   <div className="meta-grid">
                     <span>
@@ -403,42 +478,46 @@ function App() {
                     <span>난이도 {game.difficulty || '-'}</span>
                   </div>
                   <div className="card-actions">
-                    {!selectedCollection && (
+                    {!selectedList && (
                       <button
                         className="icon-button"
                         type="button"
-                        onClick={() => handleAddToCollection(game)}
+                        onClick={() => handleAddToList(game)}
                         aria-label={`${game.name} 내 목록에 추가`}
                       >
                         <Building2 size={17} />
                       </button>
                     )}
-                    {selectedCollection && (
+                    {isOwnListSelected && (
                       <button
                         className="icon-button danger"
                         type="button"
-                        onClick={() => handleRemoveFromCollection(game)}
+                        onClick={() => handleRemoveFromList(game)}
                         aria-label={`${game.name} 내 목록에서 제거`}
                       >
                         <X size={17} />
                       </button>
                     )}
-                    <button
-                      className="icon-button"
-                      type="button"
-                      onClick={() => startEdit(game)}
-                      aria-label={`${game.name} 수정`}
-                    >
-                      <Edit3 size={17} />
-                    </button>
-                    <button
-                      className="icon-button danger"
-                      type="button"
-                      onClick={() => handleDeleteFromCatalog(game)}
-                      aria-label={`${game.name} 삭제`}
-                    >
-                      <Trash2 size={17} />
-                    </button>
+                    {isAdmin && !selectedList && (
+                      <>
+                        <button
+                          className="icon-button"
+                          type="button"
+                          onClick={() => startEdit(game)}
+                          aria-label={`${game.name} 수정`}
+                        >
+                          <Edit3 size={17} />
+                        </button>
+                        <button
+                          className="icon-button danger"
+                          type="button"
+                          onClick={() => handleDeleteFromCatalog(game)}
+                          aria-label={`${game.name} 삭제`}
+                        >
+                          <Trash2 size={17} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </article>
               ))
@@ -446,7 +525,7 @@ function App() {
           </div>
         </section>
 
-        <form className="editor manage-panel" onSubmit={handleSubmit}>
+        {isAdmin && <form className="editor manage-panel" onSubmit={handleSubmit}>
           <div className="section-heading">
             <div>
               <p className="eyebrow">Admin</p>
@@ -518,22 +597,20 @@ function App() {
             <input name="category" value={form.category} onChange={handleFormChange} placeholder="전략" />
           </label>
 
-          <label>
-            설명
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleFormChange}
-              placeholder="짧은 추천 포인트"
-            />
-          </label>
-
           <button className="primary-button full" type="submit">
             <Save size={18} />
             {editingId ? '수정 저장' : '게임 등록'}
           </button>
-        </form>
+        </form>}
       </section>
+      <AuthDialog
+        mode={authMode}
+        pending={authPending}
+        error={authError}
+        onClose={() => setAuthMode(null)}
+        onSubmit={handleAuthSubmit}
+        onModeChange={openAuth}
+      />
     </main>
   );
 }
