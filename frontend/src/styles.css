@@ -597,6 +597,50 @@ textarea:focus {
   color: #d95d48;
 }
 
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  color: #8a959d;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  height: 1px;
+  flex: 1;
+  background: #e0e3e0;
+  content: "";
+}
+
+.google-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  border: 1px solid #d4dce2;
+  border-radius: 8px;
+  color: #263238;
+  background: #fff;
+  font-weight: 800;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.google-login:hover {
+  border-color: #aebbc4;
+  box-shadow: 0 6px 18px rgba(23, 50, 61, 0.1);
+}
+
+.google-mark {
+  color: #4285f4;
+  font-family: Arial, sans-serif;
+  font-size: 1.18rem;
+  font-weight: 900;
+}
+
 @media (max-width: 820px) {
   .hero-grid,
   .workspace {

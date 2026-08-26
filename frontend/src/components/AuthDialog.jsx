@@ -96,6 +96,12 @@ export default function AuthDialog({ mode, pending, error, onClose, onSubmit, on
         >
           {isSignup ? '이미 계정이 있나요? 로그인' : '처음이신가요? 회원가입'}
         </button>
+
+        <div className="auth-divider"><span>또는</span></div>
+        <a className="google-login" href="/oauth2/authorization/google">
+          <span className="google-mark" aria-hidden="true">G</span>
+          Google로 계속하기
+        </a>
       </section>
     </div>
   );

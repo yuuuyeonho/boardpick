@@ -65,6 +65,13 @@ function App() {
     loadLists();
     loadGames();
     getMe().then(setMember).catch(() => setMember(null));
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('oauthError') === 'true') {
+      setStatus({ type: 'error', message: 'Google 로그인에 실패했습니다. 다시 시도해주세요.' });
+      url.searchParams.delete('oauthError');
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
   }, []);
 
   useEffect(() => {
