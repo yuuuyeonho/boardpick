@@ -3,6 +3,8 @@ build/
 bin/
 .idea/
 .DS_Store
+.env
+docs/
 
 frontend/node_modules/
 frontend/dist/
