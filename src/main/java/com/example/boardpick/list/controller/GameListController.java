@@ -1,5 +1,6 @@
 package com.example.boardpick.list.controller;
 
+import com.example.boardpick.game.domain.GameCategory;
 import com.example.boardpick.game.dto.GameResponse;
 import com.example.boardpick.list.dto.GameListResponse;
 import com.example.boardpick.list.service.GameListService;
@@ -39,7 +40,7 @@ public class GameListController {
     public List<GameResponse> games(
             @Parameter(description = "게임 리스트 ID", required = true) @PathVariable Long listId,
             @Parameter(description = "플레이 인원수") @RequestParam(required = false) Integer players,
-            @Parameter(description = "게임 카테고리") @RequestParam(required = false) String category,
+            @Parameter(description = "게임 카테고리") @RequestParam(required = false) GameCategory category,
             @Parameter(description = "최대 플레이 시간(분)") @RequestParam(required = false) Integer maxPlayTime,
             @Parameter(description = "게임명 또는 카테고리 검색어") @RequestParam(required = false) String keyword) {
         return gameListService.getGames(listId, players, category, maxPlayTime, keyword);
@@ -50,7 +51,7 @@ public class GameListController {
     public GameResponse pick(
             @Parameter(description = "게임 리스트 ID", required = true) @PathVariable Long listId,
             @Parameter(description = "플레이 인원수") @RequestParam(required = false) Integer players,
-            @Parameter(description = "게임 카테고리") @RequestParam(required = false) String category,
+            @Parameter(description = "게임 카테고리") @RequestParam(required = false) GameCategory category,
             @Parameter(description = "최대 플레이 시간(분)") @RequestParam(required = false) Integer maxPlayTime,
             @Parameter(description = "게임명 또는 카테고리 검색어") @RequestParam(required = false) String keyword) {
         return gameListService.pickGame(listId, players, category, maxPlayTime, keyword);

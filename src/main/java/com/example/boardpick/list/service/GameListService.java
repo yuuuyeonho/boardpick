@@ -1,5 +1,6 @@
 package com.example.boardpick.list.service;
 
+import com.example.boardpick.game.domain.GameCategory;
 import com.example.boardpick.game.domain.Game;
 import com.example.boardpick.game.dto.GameResponse;
 import com.example.boardpick.game.service.GameService;
@@ -70,12 +71,12 @@ public class GameListService {
                 .toList();
     }
 
-    public List<GameResponse> getGames(Long listId, Integer players, String category,
+    public List<GameResponse> getGames(Long listId, Integer players, GameCategory category,
                                        Integer maxPlayTime, String keyword) {
         return gameService.filter(getGames(listId), players, category, maxPlayTime, keyword);
     }
 
-    public GameResponse pickGame(Long listId, Integer players, String category,
+    public GameResponse pickGame(Long listId, Integer players, GameCategory category,
                                  Integer maxPlayTime, String keyword) {
         return gameService.pick(getGames(listId), players, category, maxPlayTime, keyword);
     }

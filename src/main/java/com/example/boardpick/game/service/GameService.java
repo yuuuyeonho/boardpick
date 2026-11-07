@@ -1,5 +1,6 @@
 package com.example.boardpick.game.service;
 
+import com.example.boardpick.game.domain.GameCategory;
 import com.example.boardpick.game.domain.Game;
 import com.example.boardpick.game.dto.GameRequest;
 import com.example.boardpick.game.dto.GameResponse;
@@ -48,30 +49,31 @@ public class GameService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게임을 찾을 수 없습니다."));
     }
 
-    public List<GameResponse> search(Integer players, String category, Integer maxPlayTime, String keyword) {
+    public List<GameResponse> search(Integer players, GameCategory category, Integer maxPlayTime, String keyword) {
         return filterEntities(gameRepository.findAll(), players, category, maxPlayTime, keyword).stream()
                 .map(GameResponse::from)
                 .toList();
     }
 
-    public List<GameResponse> filter(List<Game> games, Integer players, String category, Integer maxPlayTime, String keyword) {
+    public List<GameResponse> filter(List<Game> games, Integer players, GameCategory category, Integer maxPlayTime, String keyword) {
         return filterEntities(games, players, category, maxPlayTime, keyword).stream()
                 .map(GameResponse::from)
                 .toList();
     }
 
-    private List<Game> filterEntities(List<Game> games, Integer players, String category,
+    private List<Game> filterEntities(List<Game> games, Integer players, GameCategory category,
                                       Integer maxPlayTime, String keyword) {
         return games.stream()
                 .filter(game -> players == null || game.getMinPlayer() <= players && players <= game.getMaxPlayer())
-                .filter(game -> isBlank(category) || lower(game.getCategory()).equals(lower(category)))
+                .filter(game -> category == null || game.getCategory() == category)
                 .filter(game -> maxPlayTime == null || game.getPlayTime() <= maxPlayTime)
                 .filter(game -> isBlank(keyword) || lower(game.getName()).contains(lower(keyword))
-                        || lower(game.getCategory()).contains(lower(keyword)))
+                        || (game.getCategory() != null && (lower(game.getCategory().getDisplayName()).contains(lower(keyword))
+                        || lower(game.getCategory().name()).contains(lower(keyword)))))
                 .toList();
     }
 
-    public GameResponse pick(List<Game> source, Integer players, String category, Integer maxPlayTime, String keyword) {
+    public GameResponse pick(List<Game> source, Integer players, GameCategory category, Integer maxPlayTime, String keyword) {
         List<Game> candidates = filterEntities(source, players, category, maxPlayTime, keyword);
         if (candidates.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "조건에 맞는 게임이 없습니다.");
@@ -79,7 +81,7 @@ public class GameService {
         return GameResponse.from(candidates.get(ThreadLocalRandom.current().nextInt(candidates.size())));
     }
 
-    public GameResponse pick(Integer players, String category, Integer maxPlayTime, String keyword) {
+    public GameResponse pick(Integer players, GameCategory category, Integer maxPlayTime, String keyword) {
         return pick(gameRepository.findAll(), players, category, maxPlayTime, keyword);
     }
 

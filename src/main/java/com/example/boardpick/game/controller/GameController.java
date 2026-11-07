@@ -1,5 +1,6 @@
 package com.example.boardpick.game.controller;
 
+import com.example.boardpick.game.domain.GameCategory;
 import com.example.boardpick.game.dto.GameRequest;
 import com.example.boardpick.game.dto.GameResponse;
 import com.example.boardpick.game.service.GameService;
@@ -27,7 +28,7 @@ public class GameController {
     @Operation(summary = "전체 게임 조회", description = "DB에 등록된 전체 게임을 조건에 따라 필터링합니다.")
     public List<GameResponse> findAll(
             @Parameter(description = "플레이 인원수") @RequestParam(required = false) Integer players,
-            @Parameter(description = "게임 카테고리") @RequestParam(required = false) String category,
+            @Parameter(description = "게임 카테고리") @RequestParam(required = false) GameCategory category,
             @Parameter(description = "최대 플레이 시간(분)") @RequestParam(required = false) Integer maxPlayTime,
             @Parameter(description = "게임명 또는 카테고리 검색어") @RequestParam(required = false) String keyword) {
         return gameService.search(players, category, maxPlayTime, keyword);
@@ -43,7 +44,7 @@ public class GameController {
     @Operation(summary = "전체 게임 중 무작위 추천", description = "DB 전체 게임에서 조건에 맞는 게임 하나를 무작위로 추천합니다.")
     public GameResponse pick(
             @Parameter(description = "플레이 인원수") @RequestParam(required = false) Integer players,
-            @Parameter(description = "게임 카테고리") @RequestParam(required = false) String category,
+            @Parameter(description = "게임 카테고리") @RequestParam(required = false) GameCategory category,
             @Parameter(description = "최대 플레이 시간(분)") @RequestParam(required = false) Integer maxPlayTime,
             @Parameter(description = "게임명 또는 카테고리 검색어") @RequestParam(required = false) String keyword) {
         return gameService.pick(players, category, maxPlayTime, keyword);
