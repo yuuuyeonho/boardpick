@@ -12,7 +12,9 @@ public enum GameCategory {
     PARTY("파티"),
     DEDUCTION("추리"),
     BLUFFING("심리"),
-    COOPERATIVE("협력");
+    COOPERATIVE("협력"),
+    COMPETITIVE("경쟁"),
+    DEXTERITY("순발력");
 
     private final String displayName;
 }
