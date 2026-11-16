@@ -59,7 +59,7 @@ public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest,
         attributes.put(LOGIN_ID_ATTRIBUTE, member.getLoginId());
 
         return new DefaultOAuth2User(
-                java.util.List.of(new SimpleGrantedAuthority("ROLE_MEMBER")),
+                java.util.List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name())),
                 attributes,
                 LOGIN_ID_ATTRIBUTE
         );

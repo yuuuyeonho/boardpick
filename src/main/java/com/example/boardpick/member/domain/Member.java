@@ -1,10 +1,7 @@
 package com.example.boardpick.member.domain;
 
 import com.example.boardpick.global.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,6 +22,10 @@ public class Member extends BaseEntity {
 
     @Column(nullable = false)
     private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MemberRole role = MemberRole.MEMBER;
 
     public Member(String loginId, String password, String nickname) {
         this.loginId = loginId;

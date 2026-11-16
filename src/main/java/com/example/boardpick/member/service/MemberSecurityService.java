@@ -22,8 +22,7 @@ public class MemberSecurityService implements UserDetailsService {
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-        MemberRole role = "admin".equals(member.getLoginId()) ? MemberRole.ADMIN : MemberRole.MEMBER;
         return new org.springframework.security.core.userdetails.User(member.getLoginId(), member.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + role.name())));
+                List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name())));
     }
 }
