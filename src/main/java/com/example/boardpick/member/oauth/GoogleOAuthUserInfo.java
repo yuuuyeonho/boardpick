@@ -16,10 +16,6 @@ public record GoogleOAuthUserInfo(Map<String, Object> attributes) implements OAu
 
     @Override
     public String nickname() {
-        String name = (String) attributes.get("name");
-        if (name != null && !name.isBlank()) {
-            return name;
-        }
         String email = email();
         if (email == null || email.isBlank()) {
             return "Boardpick 회원";

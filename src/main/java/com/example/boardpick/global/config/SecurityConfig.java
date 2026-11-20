@@ -1,7 +1,6 @@
 package com.example.boardpick.global.config;
 
 import com.example.boardpick.member.service.MemberSecurityService;
-import com.example.boardpick.member.service.OAuth2MemberService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +25,6 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http,
                                     MemberSecurityService memberSecurityService,
-                                    OAuth2MemberService oauth2MemberService,
                                     @Value("${app.frontend-url:http://localhost:5174}") String frontendUrl) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
@@ -34,7 +32,7 @@ public class SecurityConfig {
                 .userDetailsService(memberSecurityService)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/games/**", "/api/lists/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/members", "/api/members/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/members", "/api/members/login", "/api/oauth2/google").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
@@ -43,10 +41,6 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, cause) -> response.sendError(401))
                         .accessDeniedHandler((request, response, cause) -> response.sendError(403)))
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo.userService(oauth2MemberService))
-                        .defaultSuccessUrl(frontendUrl, true)
-                        .failureUrl(frontendUrl + "/?oauthError=true"))
                 .build();
     }
 
