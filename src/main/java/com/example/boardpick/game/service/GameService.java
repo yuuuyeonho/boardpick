@@ -31,7 +31,7 @@ public class GameService {
     public GameResponse update(Long gameId, GameRequest request) {
         Game game = getEntity(gameId);
         game.update(request.name(), request.minPlayer(), request.maxPlayer(), request.category(),
-                request.playTimeMinutes(), request.difficulty());
+                request.playTimeMinutes());
         return GameResponse.from(game);
     }
 

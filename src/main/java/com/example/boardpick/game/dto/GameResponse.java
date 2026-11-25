@@ -4,9 +4,9 @@ import com.example.boardpick.game.domain.GameCategory;
 import com.example.boardpick.game.domain.Game;
 
 public record GameResponse(Long id, String name, int minPlayer, int maxPlayer, GameCategory category,
-                           int playTimeMinutes, int difficulty) {
+                           int playTimeMinutes) {
     public static GameResponse from(Game game) {
         return new GameResponse(game.getId(), game.getName(), game.getMinPlayer(), game.getMaxPlayer(),
-                game.getCategory(), game.getPlayTime(), game.getDifficulty());
+                game.getCategory(), game.getPlayTime());
     }
 }

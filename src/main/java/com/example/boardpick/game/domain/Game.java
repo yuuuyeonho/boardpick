@@ -24,20 +24,18 @@ public class Game extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private GameCategory category;
     private int playTime;
-    private int difficulty;
 
     public Game(String name, int minPlayer, int maxPlayer, GameCategory category,
-                int playTime, int difficulty) {
-        update(name, minPlayer, maxPlayer, category, playTime, difficulty);
+                int playTime) {
+        update(name, minPlayer, maxPlayer, category, playTime);
     }
 
     public void update(String name, int minPlayer, int maxPlayer, GameCategory category,
-                       int playTimeMinutes, int difficulty) {
+                       int playTimeMinutes) {
         this.name = name;
         this.minPlayer = minPlayer;
         this.maxPlayer = maxPlayer;
         this.category = category;
         this.playTime = playTimeMinutes;
-        this.difficulty = difficulty;
     }
 }
